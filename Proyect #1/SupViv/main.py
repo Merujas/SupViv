@@ -3,8 +3,9 @@
 import pygame
 import sys
 import constants
-from character import *
-from world import *
+from character import Character
+from world import World
+from camera import Camera
 
 
 def main():
@@ -15,6 +16,7 @@ def main():
     clock = pygame.time.Clock()
     world = World(constants.width, constants.height)
     character = Character(constants.width // 2, constants.height // 2)
+    camera = Camera(constants.width, constants.height)
 
     while True:
         # Calcular el tiempo transcurrido
@@ -32,9 +34,9 @@ def main():
         world.update_chunks(character.x, character.y)
 
         # Dibujar en pantalla
-
+        screen.fill(constants.black)  # Fondo negro
         world.draw(screen, camera.x, camera.y)
-        character.draw(screen, camera.x, camera.y)
+        character.draw(screen, camera)
         pygame.display.flip()
 
 if __name__ == "__main__":

@@ -4,7 +4,7 @@ import random
 import os
 from game_resources import *
 from character import *
-
+import camera
 
 
 class WorldChunk:
@@ -21,7 +21,8 @@ class WorldChunk:
         old_state = random.getstate()
     # Establece la semilla para el random
         random.seed(chunk_seed)
-
+    # Restaura el estado anterior del random
+        random.setstate(old_state)
     # Genera elementos del chunk
 
         #Lista de arboles
@@ -53,21 +54,32 @@ class WorldChunk:
         random.setstate(old_state)
     
     def draw(self, screen, grass_image, camera_x, camera_y):
+        # dibujar el pasto en este chunk con ofset de camara
 
-    # Dibujar el pasto
-        for y in range(int(self.height // constants.Grass)):
-            for x in range(int(self.width // constants.Grass)):
+        chunk_screen_x = self.x + camera_x
+        chunk_screen_y = self.y + camera_y
+
+        #calcula el rango de tiles de pasto visibles con un tile extra para evitar lineas
+        start_x = max(0, camera_x + self.x - constants.Grass// constants.Grass)
+        end_x = min(self.width // constants.Grass +1,
+                    (camera_x - constants.width - self.x + constants.Grass) // constants.Grass +1)
+        start_y = max(0, camera_y + self.x - constants.Grass// constants.Grass)
+        end_y = min(self.height // constants.Grass +1,
+                    (camera_y - constants.height - self.y + constants.Grass) // constants.Grass +1)
+
+        for y in range(int(start_y), int(end_y)):
+            for x in range(int(start_x), int(end_x)):
                 screen_x = self.x + x * constants.Grass - camera_x
                 screen_y = self.y + y * constants.Grass - camera_y
                 screen.blit(grass_image, (screen_x, screen_y))
-
-        # Dibujar elementos (árboles y otros objetos) solo si están en pantalla
-        for tree in self.trees + self.trees2:  # Combinar árboles de ambos tipos
+        # Dibujar elementos solo si estan en pantalla
+        for tree in self.trees + self.trees2:
             tree_screen_x = tree.x - camera_x
             tree_screen_y = tree.y - camera_y
-            if (tree_screen_x + tree.size >= 0 and tree_screen_x <= constants.width and
-                    tree_screen_y + tree.size >= 0 and tree_screen_y <= constants.height):
-                tree.draw(screen)
+            if(tree_screen_x + tree.size >= 0 and tree_screen_x <= constants.width and
+               tree_screen_y + tree.size >= 0 and tree_screen_y <= constants.height):
+                tree.draw(screen, camera_x, camera_y)
+
 
 class World:
     def __init__(self, width, height):
@@ -129,14 +141,14 @@ class World:
         Dibuja los chunks activos en la pantalla, desplazados por la cámara.
         """
         # Iterar sobre los chunks activos
-        for chunk in self.active_chunks.values():
+        for chunk_key, chunk in self.active_chunks.items():
+            # Dibujar cada chunk
             chunk.draw(screen, self.grass_image, camera_x, camera_y)
 
-    @property
-    def trees(self):  # Renamed method to avoid conflict
+
+    def get_all_trees(self):  # Renamed method to avoid conflict
         all_trees = []
         for chunk in self.active_chunks.values():
-            all_trees.extend(chunk.trees)
-            all_trees.extend(chunk.trees2)
+            all_trees.extend(chunk.trees + chunk.trees2)
         return all_trees
         # Return all trees from active chunks 

@@ -1,0 +1,48 @@
+from PIL import Image
+import os
+
+# Ruta completa al archivo de la hoja de sprites
+project_folder = os.path.dirname(os.path.abspath(__file__))  # Carpeta del proyecto
+input_image_path = os.path.join(project_folder, "assets", "character", "sprites", "Walk", "Walk_Up_Right.png")
+
+# Carpeta de salida para los frames recortados
+output_folder = os.path.join(project_folder, "frames_Walk_Up_Right")
+
+# Crear carpeta de salida si no existe
+if not os.path.exists(output_folder):
+    os.makedirs(output_folder)
+
+# Cargar la imagen de la hoja de sprites
+try:
+    sprite_sheet = Image.open(input_image_path)
+except FileNotFoundError:
+    print(f"Error: No se encontró el archivo '{input_image_path}'")
+    exit()
+
+# Tamaño de cada frame
+frame_width = sprite_sheet.width // 4  # Suponemos 4 frames por fila (para las primeras 2 filas)
+frame_height = sprite_sheet.height // 3  # Suponemos 3 filas
+
+# Dividir la hoja en frames
+frame_count = 0  # Contador global para nombrar los frames
+for row in range(3):  # Iterar sobre las filas
+    if row < 2:  # Las primeras 2 filas tienen 4 frames
+        num_frames_in_row = 4
+    else:  # La tercera fila tiene solo 1 frame
+        num_frames_in_row = 1
+
+    for col in range(num_frames_in_row):  # Iterar sobre los frames en la fila actual
+        # Calcular las coordenadas del rectángulo para recortar
+        x = col * frame_width
+        y = row * frame_height
+        box = (x, y, x + frame_width, y + frame_height)
+        
+        # Recortar el frame
+        frame = sprite_sheet.crop(box)
+        
+        # Guardar el frame individual
+        output_path = os.path.join(output_folder, f"frame_{frame_count}.png")
+        frame.save(output_path)
+        frame_count += 1  # Incrementar el contador global
+
+print("Frames guardados exitosamente.")

@@ -4,7 +4,6 @@ import os
 from world import Tree
 from game_resources import *
 from sprites import load_sprites_from_folder
-from camera import Camera
 
 # Mecánicas de Personajes
 class Character:
@@ -43,11 +42,9 @@ class Character:
     def get_mask(self):
         return pygame.mask.from_surface(self.image)
 
-    def draw(self, screen, Camera_x, camera_y):
-        screen_x = self.x - Camera.x
-        screen_y = self.y - Camera.y
-
-        
+    def draw(self, screen, camera):
+        screen_x = self.x - camera.x
+        screen_y = self.y - camera.y
         screen.blit(self.image, (screen_x, screen_y))
 
     def check_collision(self, obj, new_x, new_y):
